@@ -1,0 +1,84 @@
+{
+  "info": {
+    "name": "FIT4110 Lab03 Camera Stream",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01_Functional",
+      "item": [
+        {
+          "name": "Health returns ok",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('health is 200', () => pm.response.to.have.status(200));", "pm.test('service is camera stream', () => pm.expect(pm.response.json().service).to.include('camera'));"] } }]
+        },
+        {
+          "name": "Upload valid frame",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/frames",
+            "body": { "mode": "raw", "raw": "{\"camera_id\":\"CAM-A01\",\"location\":\"Main lobby\",\"frame_format\":\"jpeg\",\"image_base64\":\"dGVzdC1pbWFnZS1mcmFtZQ==\",\"captured_at\":\"2026-05-13T08:30:00+07:00\",\"motion_score\":0.82}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('frame accepted or mocked', () => pm.expect([200,201]).to.include(pm.response.code));", "const json = pm.response.json();", "if (json.frame_id) pm.environment.set('frameId', json.frame_id);", "pm.test('accepted response has camera id', () => pm.expect(JSON.stringify(json)).to.include('CAM-A01'));"] } }]
+        },
+        {
+          "name": "List frames",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }], "url": "{{baseUrl}}/api/v1/frames?limit=10" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('list is successful', () => pm.expect([200]).to.include(pm.response.code));", "pm.test('items exists', () => pm.expect(pm.response.json()).to.have.property('items'));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "02_Auth",
+      "item": [
+        {
+          "name": "Upload without token is rejected",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/frames", "body": { "mode": "raw", "raw": "{\"camera_id\":\"CAM-A01\",\"location\":\"Main lobby\",\"frame_format\":\"jpeg\",\"image_base64\":\"dGVzdC1pbWFnZS1mcmFtZQ==\",\"captured_at\":\"2026-05-13T08:30:00+07:00\",\"motion_score\":0.82}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('unauthorized', () => pm.expect([401,403]).to.include(pm.response.code));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "03_Negative",
+      "item": [
+        {
+          "name": "Invalid image payload returns validation error",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/frames", "body": { "mode": "raw", "raw": "{\"camera_id\":\"CAM-A01\",\"location\":\"Main lobby\",\"frame_format\":\"jpeg\",\"image_base64\":\"short\",\"captured_at\":\"2026-05-13T08:30:00+07:00\",\"motion_score\":0.82}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('invalid payload rejected', () => pm.expect([400,422]).to.include(pm.response.code));", "pm.test('problem details status exists', () => pm.expect(pm.response.json()).to.have.property('status'));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "04_Boundary_Reliability",
+      "item": [
+        {
+          "name": "Motion score boundary high is accepted",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/v1/frames", "body": { "mode": "raw", "raw": "{\"camera_id\":\"CAM-A02\",\"location\":\"Parking gate\",\"frame_format\":\"png\",\"image_base64\":\"dGVzdC1pbWFnZS1mcmFtZQ==\",\"captured_at\":\"2026-05-13T08:31:00+07:00\",\"motion_score\":1}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('boundary score accepted', () => pm.expect([200,201]).to.include(pm.response.code));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "05_Consumer_side_Smoke",
+      "item": [
+        {
+          "name": "Analyze frame handles Vision and Analytics dependency",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }], "url": "{{baseUrl}}/api/v1/frames/{{frameId}}/analyze" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('dependency behavior is controlled', () => pm.expect([200,404,502,503]).to.include(pm.response.code));", "if ([502,503].includes(pm.response.code)) pm.expect(pm.response.json()).to.have.property('status');"] } }]
+        }
+      ]
+    },
+    {
+      "name": "06_Local_only_NonFunctional",
+      "item": [
+        {
+          "name": "Local health latency below 1000ms",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" },
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.environment.get('env') === 'local') { pm.test('latency below 1000ms', () => pm.expect(pm.response.responseTime).to.be.below(1000)); }"] } }]
+        }
+      ]
+    }
+  ],
+  "variable": [{ "key": "frameId", "value": "FR-20260513-0001" }]
+}

@@ -23,6 +23,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8000
 ENV AUTH_TOKEN=local-dev-token
+ENV SERVICE_NAME=camera-stream
+ENV SERVICE_VERSION=0.4.0-team-camera
 
 WORKDIR /app
 

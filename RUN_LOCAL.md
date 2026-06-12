@@ -1,92 +1,45 @@
-# RUN_LOCAL.md – Hướng dẫn chạy Lab 04
+# Run Local - Lab 04 Camera Stream
 
-Tài liệu này giúp người khác clone repo sạch và chạy lại service trong Docker.
-
----
-
-## 1. Clone repo
+## 1. Install dependencies
 
 ```bash
-git clone <repo-url>
-cd FIT4110_lab04_docker_packaging
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
----
+Windows PowerShell:
 
-## 2. Cài dependencies cho Newman/Prism/Spectral
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+## 2. Start API
 
 ```bash
-npm install
+uvicorn iot_app.main:app --app-dir src --host 0.0.0.0 --port 8000
 ```
 
----
-
-## 3. Build Docker image
-
-```bash
-docker build -t fit4110/iot-ingestion:lab04 .
-```
-
----
-
-## 4. Run container
-
-```bash
-docker run --rm \
-  --name fit4110-iot-lab04 \
-  -p 8000:8000 \
-  --env-file .env.example \
-  fit4110/iot-ingestion:lab04
-```
-
-Mở terminal khác, kiểm tra:
+## 3. Check health
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-Kết quả mong đợi:
-
-```json
-{
-  "status": "ok",
-  "service": "iot-ingestion",
-  "version": "0.4.0"
-}
-```
-
----
-
-## 5. Chạy Newman test trên container
+## 4. Build and run Docker image
 
 ```bash
+docker build -t fit4110/camera-stream:lab04 .
+docker run --rm --name fit4110-camera-lab04 -p 8000:8000 --env-file .env.example fit4110/camera-stream:lab04
+```
+
+## 5. Run Newman
+
+```bash
+npm install
 npm run test:local
 ```
 
-Report sinh tại:
-
-```text
-reports/newman-lab04-local.xml
-reports/newman-lab04-local.html
-```
-
----
-
-## 6. Dừng container
-
-Nếu không dùng `--rm` hoặc container còn chạy:
-
-```bash
-docker stop fit4110-iot-lab04
-```
-
----
-
-## 7. Lệnh nhanh
-
-```bash
-make build
-make run
-make test-docker
-make stop
-```
+The API exposes `8000:8000`, binds to `0.0.0.0`, and reads partner URLs from `.env.example`.

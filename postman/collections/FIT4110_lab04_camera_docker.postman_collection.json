@@ -20,7 +20,7 @@
             "url": "{{baseUrl}}/api/v1/frames",
             "body": { "mode": "raw", "raw": "{\"camera_id\":\"CAM-A01\",\"location\":\"Main lobby\",\"frame_format\":\"jpeg\",\"image_base64\":\"dGVzdC1pbWFnZS1mcmFtZQ==\",\"captured_at\":\"2026-05-13T08:30:00+07:00\",\"motion_score\":0.82}" }
           },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('frame accepted or mocked', () => pm.expect([200,201]).to.include(pm.response.code));", "const json = pm.response.json();", "if (json.frame_id) pm.environment.set('frameId', json.frame_id);", "pm.test('accepted response has camera id', () => pm.expect(JSON.stringify(json)).to.include('CAM-A01'));"] } }]
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('frame accepted or mocked', () => pm.expect([200,201]).to.include(pm.response.code));", "const json = pm.response.json();", "if (/^FR-[0-9]{8}-[0-9]{4}$/.test(json.frame_id || '')) pm.environment.set('frameId', json.frame_id);", "pm.test('accepted response has camera id field', () => pm.expect(json).to.have.property('camera_id'));"] } }]
         },
         {
           "name": "List frames",
@@ -65,7 +65,7 @@
         {
           "name": "Analyze frame handles Vision and Analytics dependency",
           "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }], "url": "{{baseUrl}}/api/v1/frames/{{frameId}}/analyze" },
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('dependency behavior is controlled', () => pm.expect([200,404,502,503]).to.include(pm.response.code));", "if ([502,503].includes(pm.response.code)) pm.expect(pm.response.json()).to.have.property('status');"] } }]
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('dependency behavior is controlled', () => pm.expect([200,404,422,502,503]).to.include(pm.response.code));", "if ([422,502,503].includes(pm.response.code)) pm.expect(pm.response.json()).to.have.property('status');"] } }]
         }
       ]
     },

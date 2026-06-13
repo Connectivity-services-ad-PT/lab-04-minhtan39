@@ -114,7 +114,11 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         str(exc.detail),
         str(request.url.path),
     )
-    return JSONResponse(exc.status_code, problem, media_type="application/problem+json")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=problem,
+        media_type="application/problem+json",
+    )
 
 
 @app.exception_handler(RequestValidationError)

@@ -3,6 +3,9 @@ info:
   title: Smart Campus Camera Stream API
   version: 1.0.0
   description: Contract-first API for team-camera. Camera Stream receives frames, exposes frame history, calls AI Vision for detection, and publishes camera events to Analytics.
+  contact:
+    name: Team Camera Stream
+    email: team-camera@example.edu.vn
   license:
     name: MIT
     identifier: MIT
@@ -24,6 +27,7 @@ paths:
       operationId: getCameraHealth
       tags: [health]
       summary: Check Camera Stream health
+      description: Returns service readiness plus configured partner service URLs for classroom integration checks.
       security: []
       responses:
         "200":
@@ -50,6 +54,7 @@ paths:
       operationId: uploadFrame
       tags: [frames]
       summary: Upload a camera frame
+      description: Accepts one base64-encoded frame and motion metadata from a campus camera.
       requestBody:
         required: true
         content:
@@ -80,6 +85,7 @@ paths:
       operationId: listFrames
       tags: [frames]
       summary: List accepted camera frames
+      description: Returns recently accepted frames, optionally filtered by camera id.
       parameters:
         - name: camera_id
           in: query
@@ -110,6 +116,7 @@ paths:
       operationId: getFrame
       tags: [frames]
       summary: Get one frame by id
+      description: Returns the stored metadata for a single accepted frame.
       parameters:
         - $ref: "#/components/parameters/FrameId"
       responses:
@@ -128,6 +135,7 @@ paths:
       operationId: analyzeFrame
       tags: [frames]
       summary: Send frame to AI Vision and publish Analytics event
+      description: Triggers downstream AI Vision detection and publishes a camera event for Analytics.
       parameters:
         - $ref: "#/components/parameters/FrameId"
       responses:

@@ -19,7 +19,7 @@ pip install -r requirements.txt
 ## 2. Start API
 
 ```bash
-uvicorn iot_app.main:app --app-dir src --host 0.0.0.0 --port 8000
+uvicorn camera_app.main:app --app-dir src --host 0.0.0.0 --port 8000
 ```
 
 ## 3. Check health

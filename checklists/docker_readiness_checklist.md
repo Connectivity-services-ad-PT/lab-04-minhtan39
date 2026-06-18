@@ -21,7 +21,7 @@
 
 ## Testing
 
-- [ ] Chạy lại Postman Collection từ Lab 03.
+- [ ] Chạy lại Postman Collection Camera của Lab 04.
 - [ ] Newman report sinh ra trong `reports/`.
 - [ ] Functional test pass.
 - [ ] Auth test pass trên local/container.

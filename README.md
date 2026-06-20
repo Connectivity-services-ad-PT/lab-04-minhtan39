@@ -14,6 +14,7 @@ Dockerfile
 RUN_LOCAL.md
 src/camera_app/main.py
 contracts/camera-stream.openapi.yaml
+docs/BUSINESS_ANALYSIS_CAMERA.md
 postman/collections/FIT4110_lab04_camera_docker.postman_collection.json
 postman/environments/FIT4110_lab04_local.postman_environment.json
 reports/verification-summary.md
@@ -59,3 +60,4 @@ npm run test:local
 - The API binds to `0.0.0.0` and publishes port `8000`.
 - Partner URLs are read from `.env.example`: `VISION_SERVICE_URL`, `ANALYTICS_URL`.
 - Dependency failures return controlled Problem Details responses with `502` or `503`.
+- Business behavior follows `docs/BUSINESS_ANALYSIS_CAMERA.md`: motion snapshot only, base64 Vision payload with request metadata, and event-shaped Analytics/Core handoff.

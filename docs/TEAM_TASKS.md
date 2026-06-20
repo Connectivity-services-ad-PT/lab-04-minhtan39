@@ -16,3 +16,7 @@
 - `GET /api/v1/frames`
 - `GET /api/v1/frames/{frame_id}`
 - `POST /api/v1/frames/{frame_id}/analyze`
+
+## Business Analysis
+
+See `docs/BUSINESS_ANALYSIS_CAMERA.md` for the detailed Camera Stream responsibilities from the 7-service document: validate frame, detect motion, throttle calls, preprocess snapshot, send `image_base64` to AI Vision, and publish the analyzed camera event.

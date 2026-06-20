@@ -134,8 +134,8 @@ paths:
     post:
       operationId: analyzeFrame
       tags: [frames]
-      summary: Send frame to AI Vision and publish Analytics event
-      description: Triggers downstream AI Vision detection and publishes a camera event for Analytics.
+      summary: Send motion frame to AI Vision and publish Analytics event
+      description: Builds a Vision detect request with request_id, camera metadata, motion_score, and image_base64, then publishes a camera analytics event with the detection result.
       parameters:
         - $ref: "#/components/parameters/FrameId"
       responses:
@@ -238,7 +238,7 @@ components:
         propertyName: event_type
         mapping:
           camera.frame_captured: "#/components/schemas/FrameCapturedEvent"
-          camera.frame_analyzed: "#/components/schemas/FrameAnalyzedEvent"
+          camera.motion.analyzed: "#/components/schemas/FrameAnalyzedEvent"
     FrameCapturedEvent:
       type: object
       additionalProperties: true
@@ -257,18 +257,38 @@ components:
     FrameAnalyzedEvent:
       type: object
       additionalProperties: true
-      required: [event_type, frame_id, camera_id, occurred_at]
+      required: [event_type, source_service, request_id, frame_id, camera_id, occurred_at, motion_detected, motion_score]
       properties:
         event_type:
           type: string
-          const: camera.frame_analyzed
+          const: camera.motion.analyzed
+        source_service:
+          type: string
+          const: team-camera
+        request_id:
+          type: string
         frame_id:
           type: string
         camera_id:
           type: string
+        location:
+          type: string
         occurred_at:
           type: string
           format: date-time
+        motion_detected:
+          type: boolean
+          const: true
+        motion_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        risk_level:
+          $ref: "#/components/schemas/RiskLevel"
+        unknown_person:
+          type: boolean
+        alert_candidate:
+          type: boolean
     FramePage:
       type: object
       additionalProperties: false
@@ -281,14 +301,101 @@ components:
     AnalyzeResult:
       type: object
       additionalProperties: true
-      required: [frame_id, vision, analytics]
+      required: [frame_id, vision_request, vision, analytics_event, analytics]
       properties:
         frame_id:
           type: string
+        vision_request:
+          $ref: "#/components/schemas/VisionDetectRequest"
         vision:
-          type: object
+          $ref: "#/components/schemas/VisionDetectResponse"
+        analytics_event:
+          $ref: "#/components/schemas/FrameAnalyzedEvent"
         analytics:
           type: object
+    VisionDetectRequest:
+      type: object
+      additionalProperties: false
+      required: [request_id, camera_id, timestamp, location, motion_score, image_base64]
+      properties:
+        request_id:
+          type: string
+          example: vision-request-001
+        camera_id:
+          type: string
+          example: CAM-A01
+        timestamp:
+          type: string
+          format: date-time
+        location:
+          type: string
+          example: Main lobby
+        motion_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        image_base64:
+          type: string
+          minLength: 16
+          maxLength: 500000
+        snapshot_url:
+          type: [string, "null"]
+          format: uri
+          description: Optional future optimization; labs use image_base64 to avoid shared file hosting.
+    VisionDetectResponse:
+      type: object
+      additionalProperties: true
+      required: [request_id, camera_id, timestamp, detections, unknown_person, risk_level]
+      properties:
+        request_id:
+          type: string
+        camera_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        detections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Detection"
+        unknown_person:
+          type: boolean
+        risk_level:
+          $ref: "#/components/schemas/RiskLevel"
+    Detection:
+      type: object
+      additionalProperties: false
+      required: [label, confidence]
+      properties:
+        label:
+          type: string
+          examples: [person]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        bbox:
+          $ref: "#/components/schemas/BoundingBox"
+    BoundingBox:
+      type: object
+      additionalProperties: false
+      required: [x, y, width, height]
+      properties:
+        x:
+          type: integer
+          minimum: 0
+        y:
+          type: integer
+          minimum: 0
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+    RiskLevel:
+      type: string
+      enum: [low, warning, high, critical]
     ProblemDetails:
       type: object
       additionalProperties: false

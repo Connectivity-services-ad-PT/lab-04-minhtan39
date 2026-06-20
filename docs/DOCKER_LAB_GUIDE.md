@@ -31,3 +31,4 @@ npm run test:local
 - `APP_PORT=8000`
 - `VISION_SERVICE_URL` points to AI Vision.
 - `ANALYTICS_URL` points to Analytics.
+- `POST /api/v1/frames/{frame_id}/analyze` sends AI Vision a full business payload: `request_id`, `camera_id`, `timestamp`, `location`, `motion_score`, `image_base64`.
